@@ -667,7 +667,9 @@ Every unresolved question in this document, with a stable identifier. Open an is
 
 **OP11 · The position tables were computed by hand.** §§12–13 give Sol and the eight planets at J2000.0 and at 2026-09-18. Every mean longitude was cross-checked against the body's sidereal period, every distance against its orbit bounds, and `test_sumdiaconst.py` re-derives them from code. But sixteen Kepler solves done by hand deserve independent verification against JPL Horizons. A disagreement between the hand table and the code says one of them is wrong, not which. Wanted: an independent run.
 
-**OP12 · Prior art.** Nothing here has been searched against existing patents or published coordinate systems. Polyhedral and non-orthogonal basis schemes have a long literature and some of this is likely to have been done before. Wanted: pointers to it. Being shown this is not novel is a useful outcome.
+**OP12 · Prior art.** A first-pass literature search is now done — see §17. It found close structural precedent in Quadray coordinates (1981) and established the fourteen-direction geometry as pre-existing but *different* from §3's, which raises **OP14** below. **No patent database has been searched**, and aerospace and navigation literature was not reached. Wanted: further precedent, especially operational fixed-width coordinate encodings.
+
+**OP14 · Diagonal elevation — 45° or 35.26°?** §17 shows the standard fourteen-direction set puts its diagonals at 35.26°, giving a minimum angular separation of 54.74° against §3's 45°, and matching the truncated octahedron and the BCC lattice with all their literature. §3's 45° is easier to state and picture. Wanted: whether uniformity or memorability should win.
 
 **OP13 · Nothing has been built.** No hardware implementation, no deployment, no comparison against an existing system on real data. Every claim is derivational. Wanted: someone to actually try it and report what breaks.
 
@@ -679,7 +681,69 @@ The companion draft **TRACKING.md** carries its own register, **Q1–Q9**, cover
 
 *§10 lists the same problems in prose. Where the two differ, this register is authoritative.*
 
-## 17. Licence
+## 17. Prior art
+
+A first-pass search of published literature, conducted September 2026. **Patent databases were not searched** — this covers academic and open literature only, and does not discharge the need for a professional search before any filing.
+
+The finding, stated plainly: **the architecture of this system is not new.** Overcomplete non-orthogonal polyhedral bases with a canonicalisation rule are an established idea with at least forty-five years of history. What may be unclaimed is narrower than the specification previously implied.
+
+### Quadray coordinates — the closest precedent
+
+[Quadray coordinates](https://en.wikipedia.org/wiki/Quadray_coordinates), also called caltrop, tetray or Chakovian coordinates, were developed by Darrel Jarmusch in 1981 and extended by Kirby Urner, Tom Ace and David Chako. Four basis vectors run from the centre of a regular tetrahedron to its vertices. They are non-orthogonal, they are not unit vectors, and they are deliberately overcomplete — four vectors spanning three-space.
+
+The architectural match to Sum Dia Const is close enough to be worth stating in full:
+
+| Property | Quadray | Sum Dia Const |
+| --- | --- | --- |
+| Basis | 4 vectors to tetrahedron vertices | 14 vectors, 6 cardinal + 8 diagonal |
+| Orthogonal | No | No |
+| Overcomplete | Yes, 4 for 3 dimensions | Yes, 14 for 3 dimensions |
+| Magnitudes | Non-negative only | Non-negative only |
+| Uniqueness rule | At least one coordinate set to zero | Antipodal cancellation, cardinals only (§7) |
+| Motivation | Natural fit to tetrahedral geometry | Human-readable directions |
+
+The canonicalisation in §7 is the same manoeuvre Quadray uses: an overcomplete basis made unique by a normalisation convention. That §7 arrived at it independently is not evidence of novelty.
+
+Quadrays sit inside Buckminster Fuller's synergetics and its isotropic vector matrix, with active work continuing — a tetrahedral voxel engine, and recent papers proposing Quadray-native rotation algebras as an alternative to quaternions. That last is directly relevant to **OP9**, which currently recommends quaternions for attitude.
+
+### The fourteen-direction geometry already exists — and is not this one
+
+This is the most consequential finding, because it bears on a design choice rather than on credit.
+
+The canonical fourteen-direction set in crystallography and geometry is **6 cardinals plus 8 cube-diagonals**: the nearest and next-nearest neighbours of a body-centred cubic lattice, equivalently the face normals of the [truncated octahedron](https://en.wikipedia.org/wiki/Truncated_octahedron) — also called the tetrakaidecahedron, Kelvin's cell, and by Fuller the "mecon". It is an Archimedean solid with 8 hexagonal and 6 square faces, the Wigner–Seitz cell of the BCC lattice, and one of the few polyhedra that tile space alone.
+
+That set is not the set in §3. The difference is the elevation of the diagonals:
+
+| | Diagonal elevation | Diagonal vector | Minimum angle between any two directions |
+| --- | --- | --- | --- |
+| Truncated octahedron / BCC | ±35.26° | (±1, ±1, ±1)/√3 | **54.74°** |
+| Sum Dia Const §3 | ±45° | (±½, ±½, ±√2/2) | **45.00°** |
+
+The minimum separation matters because it measures how evenly the directions cover the sphere. In the SDC set, directions a, b, c and d sit only 45° from direction 9, clustering toward the poles, while the cardinal-to-diagonal angle is 60°. The BCC set is more uniform: 54.74° cardinal-to-diagonal, 70.53° diagonal-to-diagonal, 90° between cardinals.
+
+**OP14 · Should the diagonals move to 35.26°?** Adopting the BCC set would give more uniform angular coverage, align the notation with a space-filling polyhedron that has a large existing literature, and connect it to lattice and crystallography work. The cost is that the diagonals stop being "45° up" — a value chosen because it is easy to state and easy to picture, which is design goal 1. Wanted: whether uniformity or memorability should win.
+
+### Redundant axes with a cancellation rule
+
+Cube coordinates for hexagonal grids use three axes constrained by x + y + z = 0, so opposed movements cancel exactly as antipodal pairs do in §4. Widely used in game development. Two-dimensional, but the same idea.
+
+### Encoding a location as a short fixed string
+
+[H3](https://h3geo.org/) (Uber), S2 (Google) and Geohash are the established answer to the problem §5 addresses: turn a position into a compact identifier that is cheap to store, index and join. H3 tiles an icosahedron in Fuller's Dymaxion orientation; S2 uses a Hilbert curve over cube faces.
+
+These are **surface** systems for a sphere, not volumetric systems for space, so SDC is not duplicating them. But they are what a reviewer will compare against, and they have production deployments, library bindings and an OGC abstract specification behind them. Any adoption argument has to engage with why a new system is needed rather than a 3D extension of an existing one.
+
+### What this leaves
+
+Not novel: the overcomplete non-orthogonal basis, the canonicalisation-by-convention, the redundant-axis cancellation, the compact-string encoding of position.
+
+Possibly unclaimed, and worth testing further: the particular fourteen-direction set at 45° elevation (though **OP14** questions whether it should survive); the fixed-slot encoding where string position names the direction; and the Sol-origin, Earth-anchored astronomical framing.
+
+The honest summary is that Sum Dia Const is a new arrangement of established components rather than a new kind of coordinate system. That is a reasonable thing to publish. It is not a reasonable thing to patent without a professional search, and the Quadray literature alone would likely be cited against a broad claim.
+
+**Wanted:** anyone who recognises further precedent, particularly in aerospace or navigation, where fixed-width coordinate encodings have a long operational history that this search did not reach.
+
+## 18. Licence
 
 Released under the **MIT Licence**. © 2026 Keenan Dunham.
 
@@ -689,4 +753,4 @@ The reasoning is simple: a coordinate system nobody can freely implement is a co
 
 Contributions, corrections, and counterexamples are welcome through the repository's issues and pull requests.
 
-**Prior art note.** Nothing in this document has been searched against existing patents or published coordinate systems. Before any filing or formal publication, a prior-art search is warranted — polyhedral and non-orthogonal basis coordinate schemes have a long literature, and this specification makes no claim to have checked it.
+**Prior art.** A first-pass search of published literature has now been done and is written up in section 17. It found close structural precedent. No patent database has been searched.
