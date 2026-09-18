@@ -2,7 +2,7 @@
 
 ## A Universal Space-Time Coordinate Notation — Specification Draft 1
 
-Keenan Dunham · 2026-09-18 · @Someone
+Keenan Dunham · 2026-09-18
 
 ## 1. Status and scope
 
