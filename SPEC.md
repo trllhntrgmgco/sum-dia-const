@@ -2,7 +2,7 @@ Sum Dia Const
 
 A Universal Space-Time Coordinate Notation — Specification Draft 1
 
-Keenan Dunham · 2026-09-18 · @u_HqWpUBbr0Da0bG_53zvTzQ
+Keenan Dunham · 2026-09-18 
 
 1. Status and scope
 
